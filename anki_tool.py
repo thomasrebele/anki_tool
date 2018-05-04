@@ -90,13 +90,18 @@ def rename_tags(conn, tags, remove=False):
         found = False
         keys = list(tagsdict.keys())
         for tag in keys:
+            # if regex matches tag
             if re.search(target, tag, re.I):
                 found = True
                 n += 1
                 del tagsdict[tag]
-                dsttag = re.sub(target, dst, tag)
+
+                # if we rename the tag
                 if dst:
+                    dsttag = re.sub(target, dst, tag)
                     tagsdict[dsttag] = -1
+                else:
+                    dsttag = dst
 
                 try:
                     print("replace tag ", tag, " with ", dsttag)
@@ -108,9 +113,7 @@ def rename_tags(conn, tags, remove=False):
                 print("Couldn't find tags matching ‘{}’, searching notes",
                       "for exact string.".format(target), file=sys.stderr)
             try:
-                dsttag = re.sub(target, dst, tag)
-                print("replace tag ", tag, " with ", dsttag, " (notfound?)")
-                rename_tag_in_notes(conn, target, dsttag)
+                rename_tag_in_notes(conn, target, dst)
             except sqlite3.OperationalError:
                 return False
 
@@ -357,7 +360,7 @@ def print_notes_fields(conn, ids, _json=False):
             success = True
             notes[_id] = print_fields(conn, _id, row['mid'], row['flds'],
                                       _json=_json)
-                
+
     if _json:
         print(json.dumps(notes))
     return success
@@ -466,7 +469,7 @@ def print_notes_tags(conn, ids, _json=False):
                 notes[_id] = row['tags']
             else:
                 print_tags(conn, _id, row['tags'])
-                
+
     if _json:
         print(json.dumps(notes))
     return success
@@ -718,7 +721,7 @@ def run():
     else:
         collection = find_collection()
         if not collection:
-            print("Error: couldn't find collection. Try specifying its", 
+            print("Error: couldn't find collection. Try specifying its",
                   "location with -c.", file=sys.stderr)
             exit(1)
 
